@@ -7,7 +7,7 @@ import readNDJSONStream from "ndjson-readablestream";
 import appLogo from "../../assets/applogo.svg";
 import styles from "./Chat.module.css";
 
-import { chatApi, configApi, RetrievalMode, ChatAppResponse, ChatAppResponseOrError, ChatAppRequest, ResponseMessage, SpeechConfig } from "../../api";
+import { chatApi, configApi, categoriesApi, RetrievalMode, ChatAppResponse, ChatAppResponseOrError, ChatAppRequest, ResponseMessage, SpeechConfig } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -82,6 +82,7 @@ const Chat = () => {
     const [showChatHistoryCosmos, setShowChatHistoryCosmos] = useState<boolean>(false);
     const [showAgenticRetrievalOption, setShowAgenticRetrievalOption] = useState<boolean>(false);
     const [useAgenticRetrieval, setUseAgenticRetrieval] = useState<boolean>(false);
+    const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
     const audio = useRef(new Audio()).current;
     const [isPlaying, setIsPlaying] = useState(false);
@@ -132,6 +133,14 @@ const Chat = () => {
             if (config.showAgenticRetrievalOption) {
                 setRetrieveCount(10);
             }
+        });
+        
+        // Fetch available categories
+        categoriesApi().then(categories => {
+            setAvailableCategories(categories);
+        }).catch(error => {
+            console.warn("Failed to fetch categories:", error);
+            setAvailableCategories([]);
         });
     };
 
@@ -569,6 +578,7 @@ const Chat = () => {
                         showSuggestFollowupQuestions={true}
                         showAgenticRetrievalOption={showAgenticRetrievalOption}
                         useAgenticRetrieval={useAgenticRetrieval}
+                        availableCategories={availableCategories}
                         onChange={handleSettingsChange}
                     />
                     {useLogin && <TokenClaimsDisplay />}

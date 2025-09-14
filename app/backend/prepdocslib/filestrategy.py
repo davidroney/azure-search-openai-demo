@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Optional
 
 from azure.core.credentials import AzureKeyCredential
@@ -12,6 +13,44 @@ from .searchmanager import SearchManager, Section
 from .strategy import DocumentAction, SearchInfo, Strategy
 
 logger = logging.getLogger("scripts")
+
+
+def extract_category_from_path(file_path: str, base_path: Optional[str] = None) -> Optional[str]:
+    """
+    Extract category from file path based on subfolder name.
+    
+    Args:
+        file_path: Full path to the file
+        base_path: Optional base path to remove from file_path
+    
+    Returns:
+        Category name (subfolder name) or None if no subfolder detected
+    """
+    try:
+        # Normalize the path
+        path = os.path.normpath(file_path)
+        
+        # Get the directory containing the file
+        dir_path = os.path.dirname(path)
+        
+        # If base_path is provided, make path relative to it
+        if base_path and dir_path.startswith(base_path):
+            dir_path = os.path.relpath(dir_path, base_path)
+        
+        # Split the path into parts
+        path_parts = dir_path.split(os.sep)
+        
+        # Filter out empty parts and current directory references
+        path_parts = [part for part in path_parts if part and part != '.' and part != '..' and part != '']
+        
+        # Return the first non-empty directory as the category
+        if path_parts:
+            return path_parts[0]
+        
+        return None
+    except Exception as e:
+        logger.debug(f"Could not extract category from path {file_path}: {e}")
+        return None
 
 
 async def parse_file(
@@ -116,8 +155,17 @@ class FileStrategy(Strategy):
             async for file in files:
                 try:
                     await self.blob_manager.upload_blob(file)
+                    
+                    # Use provided category or auto-detect from file path
+                    file_category = self.category
+                    if not file_category:
+                        # Extract the full path from the file object
+                        full_path = getattr(file.content, 'name', None)
+                        if full_path:
+                            file_category = extract_category_from_path(full_path)
+                    
                     sections = await parse_file(
-                        file, self.file_processors, self.category, self.blob_manager, self.image_embeddings
+                        file, self.file_processors, file_category, self.blob_manager, self.image_embeddings
                     )
                     if sections:
                         await self.search_manager.update_content(sections, url=file.url)

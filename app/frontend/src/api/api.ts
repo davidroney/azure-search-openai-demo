@@ -22,6 +22,19 @@ export async function configApi(): Promise<Config> {
     return (await response.json()) as Config;
 }
 
+export async function categoriesApi(): Promise<string[]> {
+    const response = await fetch(`${BACKEND_URI}/categories`, {
+        method: "GET"
+    });
+
+    if (response.status > 299 || !response.ok) {
+        throw Error(`Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.categories || [];
+}
+
 export async function askApi(request: ChatAppRequest, idToken: string | undefined): Promise<ChatAppResponse> {
     const headers = await getHeaders(idToken);
     const response = await fetch(`${BACKEND_URI}/ask`, {

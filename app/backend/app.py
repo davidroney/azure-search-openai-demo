@@ -306,6 +306,43 @@ def config():
     )
 
 
+@bp.route("/categories", methods=["GET"])
+async def get_categories():
+    """
+    Get available document categories from the search index.
+    
+    Returns:
+        JSON list of available categories
+    """
+    try:
+        search_client = current_app.config[CONFIG_SEARCH_CLIENT]
+        
+        # Use faceted search to get all distinct category values
+        results = await search_client.search(
+            search_text="*",  # Search all documents
+            facets=["category"],
+            top=0,  # We don't need the actual documents, just facets
+        )
+        
+        categories = []
+        async for result in results.by_page():
+            # Extract category facets
+            facets = result.get_facets()
+            if facets and "category" in facets:
+                for facet in facets["category"]:
+                    if facet.get("value") and facet["value"] not in categories:
+                        categories.append(facet["value"])
+            break  # We only need the first page for facets
+        
+        # Sort and filter out None/empty values
+        categories = sorted([cat for cat in categories if cat])
+        return jsonify({"categories": categories})
+    
+    except Exception as e:
+        logging.exception(f"Error retrieving categories: {e}")
+        return jsonify({"error": "Failed to retrieve categories", "categories": []}), 500
+
+
 @bp.route("/speech", methods=["POST"])
 async def speech():
     if not request.is_json:

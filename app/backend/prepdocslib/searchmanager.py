@@ -567,3 +567,34 @@ class SearchManager:
                 logger.info("Removed %d sections from index", len(removed_docs))
                 # It can take a few seconds for search results to reflect changes, so wait a bit
                 await asyncio.sleep(2)
+
+    async def get_available_categories(self) -> list[str]:
+        """
+        Get a list of all available categories from the search index using faceted search.
+        
+        Returns:
+            List of category names found in the index
+        """
+        try:
+            async with self.search_info.create_search_client() as search_client:
+                # Use faceted search to get all distinct category values
+                results = await search_client.search(
+                    search_text="*",  # Search all documents
+                    facets=["category"],
+                    top=0,  # We don't need the actual documents, just facets
+                )
+                
+                categories = []
+                async for result in results.by_page():
+                    # Extract category facets
+                    facets = result.get_facets()
+                    if facets and "category" in facets:
+                        for facet in facets["category"]:
+                            if facet.get("value") and facet["value"] not in categories:
+                                categories.append(facet["value"])
+                    break  # We only need the first page for facets
+                
+                return sorted([cat for cat in categories if cat])  # Sort and filter out None/empty values
+        except Exception as e:
+            logger.warning(f"Failed to get available categories from search index: {e}")
+            return []
