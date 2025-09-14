@@ -48,6 +48,7 @@ export interface SettingsProps {
     showSuggestFollowupQuestions?: boolean;
     showAgenticRetrievalOption: boolean;
     useAgenticRetrieval: boolean;
+    availableCategories?: string[]; // Available categories for the dropdown
 }
 
 export const Settings = ({
@@ -88,7 +89,8 @@ export const Settings = ({
     promptTemplateSuffix,
     showSuggestFollowupQuestions,
     showAgenticRetrievalOption,
-    useAgenticRetrieval
+    useAgenticRetrieval,
+    availableCategories = []
 }: SettingsProps) => {
     const { t } = useTranslation();
 
@@ -242,8 +244,8 @@ export const Settings = ({
                 onChange={(_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IDropdownOption) => onChange("includeCategory", option?.key || "")}
                 aria-labelledby={includeCategoryId}
                 options={[
-                    { key: "", text: t("labels.includeCategoryOptions.all") }
-                    // { key: "example", text: "Example Category" } // Add more categories as needed
+                    { key: "", text: t("labels.includeCategoryOptions.all") },
+                    ...availableCategories.map(category => ({ key: category, text: category }))
                 ]}
                 onRenderLabel={props => renderLabel(props, includeCategoryId, includeCategoryFieldId, t("helpTexts.includeCategory"))}
             />

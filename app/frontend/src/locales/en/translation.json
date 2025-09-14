@@ -146,9 +146,9 @@
         "resultsMergeStrategy":
             "Sets the strategy for merging results from multiple subqueries. Interleaved picks the top results from each subquery in round robin order, while descending sorts all results by reranker score.",
         "includeCategory":
-            "Specifies a category to include in the search results. There are no categories used in the default data set.",
+            "Specifies a category to include in the search results. Categories are automatically detected from document subfolder names.",
          "excludeCategory":
-            "Specifies a category to exclude from the search results. There are no categories used in the default data set.",
+            "Specifies a category to exclude from the search results. Categories are automatically detected from document subfolder names.",
          "useSemanticReranker":
             "Enables the Azure AI Search semantic ranker, a model that re-ranks search results based on semantic similarity to the user's query.",
         "useQueryRewriting":

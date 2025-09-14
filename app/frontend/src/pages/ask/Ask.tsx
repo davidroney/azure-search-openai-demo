@@ -5,7 +5,7 @@ import { Panel, DefaultButton, Spinner } from "@fluentui/react";
 
 import styles from "./Ask.module.css";
 
-import { askApi, configApi, ChatAppResponse, ChatAppRequest, RetrievalMode, SpeechConfig } from "../../api";
+import { askApi, configApi, categoriesApi, ChatAppResponse, ChatAppRequest, RetrievalMode, SpeechConfig } from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -59,6 +59,7 @@ export function Component(): JSX.Element {
     const [isPlaying, setIsPlaying] = useState(false);
     const [showAgenticRetrievalOption, setShowAgenticRetrievalOption] = useState<boolean>(false);
     const [useAgenticRetrieval, setUseAgenticRetrieval] = useState<boolean>(false);
+    const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
     const lastQuestionRef = useRef<string>("");
 
@@ -114,6 +115,14 @@ export function Component(): JSX.Element {
             if (config.showAgenticRetrievalOption) {
                 setRetrieveCount(10);
             }
+        });
+        
+        // Fetch available categories
+        categoriesApi().then(categories => {
+            setAvailableCategories(categories);
+        }).catch(error => {
+            console.warn("Failed to fetch categories:", error);
+            setAvailableCategories([]);
         });
     };
 
@@ -391,6 +400,7 @@ export function Component(): JSX.Element {
                     requireAccessControl={requireAccessControl}
                     showAgenticRetrievalOption={showAgenticRetrievalOption}
                     useAgenticRetrieval={useAgenticRetrieval}
+                    availableCategories={availableCategories}
                     onChange={handleSettingsChange}
                 />
                 {useLogin && <TokenClaimsDisplay />}
